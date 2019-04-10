@@ -51,6 +51,25 @@ process_module() {
             -e $REGEX_RM_LEADING_SPACES \
             -e $REGEX_RM_EMPTY_LINES \
             -e $REGEX_FORMAT_KEYS
+
+    mod_json=`jq -n --arg id "$mod_id" '.["id"] = $id'`
+    c_key="Titre"
+    while read line ; do
+        case $line in
+            *:)
+                c_key=`echo $line | sed 's/:$//g'`
+                value=""
+                ;;
+            *)
+                value=`echo $line | sed 's/$/\ /g'`
+                ;;
+        esac
+        mod_json=`echo $mod_json \
+                | jq --arg key "$c_key" --arg val "$value" '.[$key] += $val'`
+    done < $mod_tmp_file
+
+    jq -n --argjson mod "$mod_json" '$mod' > $TMPDIR/mod_${mod_id}.json
+    sed -i $TMPDIR/mod_${mod_id}.json -e 's/\s\+\(",\?\)$/\1/g'
 }
 
 
@@ -63,5 +82,7 @@ modules=`xmllint --html $catalogue \
        | cut -d '"' -f2`
 
 for mod in $modules ; do process_module $mod ; done
+
+cat $TMPDIR/mod_*.json | jq "." > $OUTFILE
 
 rm -rf $TMPDIR
