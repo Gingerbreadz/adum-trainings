@@ -3,6 +3,15 @@
 Shell script designed to extract the training course list from the ADUM
 platform into JSON format for further processing.
 
+# Dependencies
+
+* bash
+* curl
+* sed
+* jq
+* tidy
+* xmllint
+
 # Usage
 
 - Clone the repository

@@ -4,6 +4,13 @@ ADUM_COOKIE_FILE=cookie
 ADUM_URL="https://adum.fr/phd/formation/catalogue.pl"
 OUTFILE="catalogue.json"
 
+require_cmd() {
+    cmd=`command -v $1` || {
+        echo "$1: command required but not found. Exiting."
+        exit 1
+    }
+}
+
 require_file() {
     [ -f $1 ] || {
         echo "$1: file required but not found. Exiting."
@@ -16,7 +23,24 @@ TMPDIR=`mktemp -d -p /tmp -t tmp.adumparser.XXXXXXXXXX` || {
     exit 1
 }
 
+#Fetch ADUM web pages
+require_cmd curl
 require_file $ADUM_COOKIE_FILE
+
+#Correct & clean HTML pages
+require_cmd tidy
+
+#Extract text from HTML and XPath
+require_cmd xmllint
+
+#Manual formatting of text
+require_cmd sed
+
+#JSON format handling
+require_cmd jq
+
+#Create tmpdir to store tmpfiles
+require_cmd mktemp
 
 REGEX_RM_LEADING_SPACES='s/^\s\+//g'
 REGEX_RM_TRAILING_SPACES='s/\s\+$//g'
