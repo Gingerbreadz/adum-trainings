@@ -23,6 +23,16 @@ REGEX_RM_TRAILING_SPACES='s/\s\+$//g'
 REGEX_RM_EMPTY_LINES='/^$/d'
 REGEX_FORMAT_KEYS='s/\(.*\S\)\s\?:$/\1:/g'
 
+parallel_for() {
+    func=$1
+    shift 1
+
+    pids=()
+    for val in $@ ; do $func $val & pids+=($!) ; done
+
+    for pid in ${pids[*]}; do wait $pid ; done
+}
+
 fetch_page() {
     url=$1
     outfile=$2
@@ -81,7 +91,7 @@ modules=`xmllint --html $catalogue \
                  --xpath "/html/body/div/form/div/div/div/table/tr/td/a/@href" \
        | cut -d '"' -f2`
 
-for mod in $modules ; do process_module $mod ; done
+parallel_for process_module $modules
 
 cat $TMPDIR/mod_*.json | jq "." > $OUTFILE
 
